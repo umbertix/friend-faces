@@ -29,8 +29,10 @@ class Server():
             self.socket_id
         )
 
-    def send_message(self, channel, title, message):
+    def send_message(self, title, message, channel=None):
         """Send a message to the channel"""
+        if channel is None:
+            channel = self.channel_name
         self.pusher.trigger(channel, title, {message})
 
     @app.route("/webhook", methods=['POST'])
