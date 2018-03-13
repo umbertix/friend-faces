@@ -19,7 +19,7 @@ class Server():
         self.channel_name = channel_name
         self.cluster = cluster
         self.encrypted = encrypted
-        self.socket_id = u"1234.12"
+        self.socket_id = None
         self.auth = self.join_channel()
 
     def join_channel(self):
@@ -34,19 +34,3 @@ class Server():
         if channel is None:
             channel = self.channel_name
         self.pusher.trigger(channel, title, {message})
-
-    @app.route("/webhook", methods=['POST'])
-    def pusher_webhook(self):
-        webhook = self.pusher.validate_webhook(
-            key=request.headers.get('X-Pusher-Key'),
-            signature=request.headers.get('X-Pusher-Signature'),
-            body=request.data
-        )
-
-        for event in webhook['events']:
-            if event['name'] == "channel_occupied":
-                print("Channel occupied: %s" % event["channel"])
-            elif event['name'] == "channel_vacated":
-                print("Channel vacated: %s" % event["channel"])
-
-        return "ok"

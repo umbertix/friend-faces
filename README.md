@@ -33,3 +33,10 @@ The links to the components are just a suggestion on where to get them. Internet
     - scons
     - cd python
     - sudo python setup.py install
+- Install the project
+    - git clone https://github.com/umbertix/friend-faces.git
+    - cd friend-faces
+    - sudo python setup.py install
+-Config your lamp
+    - Within the project there is file named `config.ini` and hold your credentials for the pusher service.
+    You will need to update those in order to communicate, also if you decide to use any other pin setup or ring size.
