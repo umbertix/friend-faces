@@ -1,8 +1,8 @@
 from pusher import Pusher
 
 
-class Server():
-    """Server side logic."""
+class Sender:
+    """Pusher send side logic."""
 
     def __init__(self, app_id, key, secret, channel_name, cluster=None, encrypted=None):
         """Initializes the server object."""
@@ -29,8 +29,8 @@ class Server():
             self.socket_id
         )
 
-    def send_message(self, title, message, channel=None):
-        """Send a message to the channel"""
+    def send_message(self, event, message, channel=None):
+        """Send an event to the channel"""
         if channel is None:
             channel = self.channel_name
-        self.pusher.trigger(channel, title, {message})
+        self.pusher.trigger(channel, event, {message})

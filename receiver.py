@@ -1,0 +1,26 @@
+import pysher
+
+
+class Receiver:
+    """Pusher receiver, channel subscription, side logic"""
+
+    # Add a logging handler so we can see the raw communication data
+    # import logging
+    # root = logging.getLogger()
+    # root.setLevel(logging.INFO)
+    # ch = logging.StreamHandler(sys.stdout)
+    # root.addHandler(ch)
+
+    def __init__(self, key, channel_name, event_name, event_callback_function):
+        self.channel_name = channel_name
+        self.event_name = event_name
+        self.event_callback_function = event_callback_function
+        self.pusher = pysher.Pusher(key)
+        self.pusher.connection.bind('pusher:connection_established', self.connect_handler)
+        self.pusher.connect()
+
+    # We can't subscribe until we've connected, so we use a callback handler
+    # to subscribe when able
+    def connect_handler(self):
+        channel = self.pusher.subscribe(self.channel_name)
+        channel.bind(self.event_name, self.event_callback_function)

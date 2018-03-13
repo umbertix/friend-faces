@@ -5,6 +5,7 @@ VERSION = "0.0.1"
 requirements = [
     "websocket-client",
     "pusher",
+    "pysher",
     "neopixel",
     "gpiozero",
 ]

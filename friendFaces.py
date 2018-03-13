@@ -1,7 +1,8 @@
 import time
 import configparser
-from server import Server
-from neopixel import *
+from sender import Sender
+from receiver import Receiver
+from neopixel import Color, Adafruit_NeoPixel
 from gpiozero import Button
 
 
@@ -14,12 +15,20 @@ class FriendFaces:
         self.default_color_g = self.cfg.get('GENERAL', 'COLOR_G')
         self.default_color_b = self.cfg.get('GENERAL', 'COLOR_B')
 
-        self.server = Server(
+        # Sender will be used to send messages to the channel
+        self.sender = Sender(
             self.cfg.get('PUSHER', 'APPID'),
             self.cfg.get('PUSHER', 'APPKEY'),
             self.cfg.get('PUSHER', 'APPSECRET'),
             self.cfg.get('PUSHER', 'CHANNELNAME'),
             self.cfg.get('PUSHER', 'CLUSTER')
+        )
+        # Receiver will subscribe to the channel
+        self.receiver = Receiver(
+            self.cfg.get('PUSHER', 'APPKEY'),
+            self.cfg.get('PUSHER', 'CHANNELNAME'),
+            self.cfg.get('PUSHER', 'EVENTNAME'),
+            self.received_hello
         )
 
         self.initializes_gpios()
@@ -68,13 +77,15 @@ class FriendFaces:
         self.button3.when_pressed = self.manual_turn_off
 
     def say_hello_button(self):
-        self.server.send_message(
-            'Hello title',
+        self.sender.send_message(
+            self.cfg.get('PUSHER', 'EVENTNAME'),
             'Hello message'
         )
 
-    def received_hello(self):
+    def received_hello(self, *args, **kwargs):
         """turn on the light for X seconds"""
+        print("processing Args:", args)
+        print("processing Kwargs:", kwargs)
         self.rainbow(self.strip)
 
     def change_color_on_touch(self):
