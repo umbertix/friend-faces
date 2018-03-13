@@ -18,7 +18,7 @@ The links to the components are just a suggestion on where to get them. Internet
 - [NeoPixel LED ring](https://www.adafruit.com/product/1643) (default 12 leds)
 - A free account in [Pusher](www.pusher.com)
 - [Capacitive sensor]((https://www.adafruit.com/product/1362)) (5-pad)
-- You will also need some electric calbes to connect everything together. 
+- You will also need some electric cables to connect everything together. 
 
 ### Installation
 
