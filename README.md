@@ -3,6 +3,8 @@
 Interconnected touch activated lamps
 
 ### Aim of the project
+This project is aimed to people with little knowledge on programming and electronics and therefore the explanaiton is as simple as possible.
+
 The aim of this project is to create a pair of "lamps" that are interconnected through internet over wifi and that respond to the event of each other.
 The "lamp" will hold up to 5 capacitive sensors (touch/proximity) and will run different actions on the lamp.
 
@@ -26,17 +28,26 @@ The links to the components are just a suggestion on where to get them. Internet
 - Set up the wifi. (I recommend using a headless installation)
 - SSH into the raspberry
 - [Install the rpi_ws281x Library](https://learn.adafruit.com/neopixels-on-raspberry-pi/software)
-    - sudo apt-get update
-    - sudo apt-get install build-essential python-dev git scons swig
-    - git clone https://github.com/jgarff/rpi_ws281x.git
-    - cd rpi_ws281x
-    - scons
-    - cd python
-    - sudo python setup.py install
-- Install the project
-    - git clone https://github.com/umbertix/friend-faces.git
-    - cd friend-faces
-    - sudo python setup.py install
+    - `sudo apt-get update`
+    - `sudo apt-get install build-essential python-dev git scons swig`
+    - `git clone https://github.com/jgarff/rpi_ws281x.git`
+    - `cd rpi_ws281x`
+    - `scons`
+    - `cd python`
+    - `sudo python setup.py install`
+- [Install GPIO Zero library](https://gpiozero.readthedocs.io/en/stable/installing.html)
+    - `sudo apt install python3-gpiozero`
+- [Install the project](https://github.com/umbertix/friend-faces)
+    - `git clone https://github.com/umbertix/friend-faces.git`
+    - `cd friend-faces`
+    - `sudo python setup.py install`
 - Config your lamp
     - Within the project there is file named `config.ini` that holds your credentials for the pusher service.
     You will need to update those in order to communicate, also if you decide to use any other pin setup or ring size.
+
+### How to run the script on boot
+Inside the project files you'll find the `launcher.sh`, just create a cron that call it on the reboot and you are good to go.
+The command to do so are as follow:
+- Make the file executable: `chmod 755 launcher.sh`
+- Create a cron: `sudo crontab -e`
+- Inside the cron write: `@reboot sh /home/pi/friend-faces/launcher.sh`

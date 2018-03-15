@@ -4,18 +4,11 @@ import pysher
 class Receiver:
     """Pusher receiver, channel subscription, side logic"""
 
-    # Add a logging handler so we can see the raw communication data
-    # import logging
-    # root = logging.getLogger()
-    # root.setLevel(logging.INFO)
-    # ch = logging.StreamHandler(sys.stdout)
-    # root.addHandler(ch)
-
-    def __init__(self, key, channel_name, event_name, event_callback_function):
+    def __init__(self, key, secret, channel_name, event_name, event_callback_function):
         self.channel_name = channel_name
         self.event_name = event_name
         self.event_callback_function = event_callback_function
-        self.pusher = pysher.Pusher(key)
+        self.pusher = pysher.Pusher(key, secret)
         self.pusher.connection.bind('pusher:connection_established', self.connect_handler)
         self.pusher.connect()
 

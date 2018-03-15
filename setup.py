@@ -6,8 +6,7 @@ requirements = [
     "websocket-client",
     "pusher",
     "pysher",
-    "neopixel",
-    "gpiozero",
+    "configparser",
 ]
 
 

@@ -2,7 +2,7 @@ import time
 import configparser
 from sender import Sender
 from receiver import Receiver
-from neopixel import Color, Adafruit_NeoPixel
+from neopixel import *
 from gpiozero import Button
 
 
@@ -26,6 +26,7 @@ class FriendFaces:
         # Receiver will subscribe to the channel
         self.receiver = Receiver(
             self.cfg.get('PUSHER', 'APPKEY'),
+            self.cfg.get('PUSHER', 'APPSECRET'),
             self.cfg.get('PUSHER', 'CHANNELNAME'),
             self.cfg.get('PUSHER', 'EVENTNAME'),
             self.received_hello
