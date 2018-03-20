@@ -14,6 +14,6 @@ class Receiver:
 
     # We can't subscribe until we've connected, so we use a callback handler
     # to subscribe when able
-    def connect_handler(self):
+    def connect_handler(self, data):
         channel = self.pusher.subscribe(self.channel_name)
         channel.bind(self.event_name, self.event_callback_function)

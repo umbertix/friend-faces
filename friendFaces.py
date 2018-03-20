@@ -1,4 +1,5 @@
 import time
+import datetime
 import configparser
 from sender import Sender
 from receiver import Receiver
@@ -8,22 +9,30 @@ from gpiozero import Button
 
 class FriendFaces:
     def __init__(self):
+        print('Initializing.....')
+        self.status = 'off'
+        self.onColor = Color(255, 255, 255, 100)
+        self.offColor = Color(0, 0, 0, 1)
+        self.flashColor = Color(48, 24, 201)
         self.cfg = configparser.ConfigParser()
         self.load_config()
+        print('Config loaded')
+        self.default_color_r = self.cfg.getint('GENERAL', 'COLOR_R')
+        self.default_color_g = self.cfg.getint('GENERAL', 'COLOR_G')
+        self.default_color_b = self.cfg.getint('GENERAL', 'COLOR_B')
 
-        self.default_color_r = self.cfg.get('GENERAL', 'COLOR_R')
-        self.default_color_g = self.cfg.get('GENERAL', 'COLOR_G')
-        self.default_color_b = self.cfg.get('GENERAL', 'COLOR_B')
-
+        print('Initializing sender....')
         # Sender will be used to send messages to the channel
         self.sender = Sender(
             self.cfg.get('PUSHER', 'APPID'),
             self.cfg.get('PUSHER', 'APPKEY'),
             self.cfg.get('PUSHER', 'APPSECRET'),
             self.cfg.get('PUSHER', 'CHANNELNAME'),
-            self.cfg.get('PUSHER', 'CLUSTER')
+            self.cfg.get('PUSHER', 'CLUSTER'),
+            encrypted=False
         )
-        # Receiver will subscribe to the channel
+        print('sender initialized')
+        print('Initializing receiver....')
         self.receiver = Receiver(
             self.cfg.get('PUSHER', 'APPKEY'),
             self.cfg.get('PUSHER', 'APPSECRET'),
@@ -31,21 +40,24 @@ class FriendFaces:
             self.cfg.get('PUSHER', 'EVENTNAME'),
             self.received_hello
         )
-
+        print('Receiver initialized')
+        print('Initializing gpios....')
         self.initializes_gpios()
-
+        print('gpios initialized')
         self.strip = Adafruit_NeoPixel(
             self.cfg.getint('LED', 'COUNT'),
             self.cfg.getint('LED', 'PIN'),
             self.cfg.getint('LED', 'FREQ_HZ'),
             self.cfg.getint('LED', 'DMA'),
-            self.cfg.getint('LED', 'INVERT'),
-            self.cfg.getint('LED', 'BRIGHTNESS'),
-            self.cfg.getint('LED', 'CHANNEL'),
-            self.cfg.getint('LED', 'STRIP')
+            self.cfg.getboolean('LED', 'INVERT'),
         )
+
         self.strip.begin()  # Initialize neopixel library
-        self.rainbow(self.strip)
+        print('Setting brightness')
+        self.setBrightness()
+        print('!! READY !!')
+        print('!! Flashing !!')
+        self.flash()
 
     def load_config(self):
         """Loads the configuration from the file"""
@@ -78,6 +90,7 @@ class FriendFaces:
         self.button3.when_pressed = self.manual_turn_off
 
     def say_hello_button(self):
+        print('Say Hello button')
         self.sender.send_message(
             self.cfg.get('PUSHER', 'EVENTNAME'),
             'Hello message'
@@ -85,27 +98,32 @@ class FriendFaces:
 
     def received_hello(self, *args, **kwargs):
         """turn on the light for X seconds"""
-        print("processing Args:", args)
-        print("processing Kwargs:", kwargs)
-        self.rainbow(self.strip)
+        print('Received !!!!!!!!!!')
+        self.flash()
 
     def change_color_on_touch(self):
         """Change the color incrementally while pressing the button and returns the value"""
         r = self.default_color_r
         g = self.default_color_g
         b = self.default_color_b
+        i = 0
+        while self.button1.is_held or self.button1.is_pressed:
+            i += 1
+            if r > 0 and b == 0:
+                r -= 1
+                g += 1
 
-        if r > 0 & b == 0:
-            r -= 1
-            g += 1
+            if g > 0 and r == 0:
+                g -= 1
+                b += 1
 
-        if g > 0 & r == 0:
-            g -= 1
-            b += 1
+            if b > 0 and g == 0:
+                r += 1
+                b -= 1
 
-        if b > 0 & g == 0:
-            r += 1
-            b -= 1
+            if i % 50 == 0:
+                self.colorWipe(Color(r, g, b))
+                time.sleep((self.strip.numPixels() * 10) / 1000.0)
 
         self.default_color_r = r
         self.default_color_g = g
@@ -113,24 +131,29 @@ class FriendFaces:
 
     def save_color_in_memory(self):
         """Saves the color into the SD card to reuse"""
-        self.cfg['GENERAL']['COLOR_R'] = self.default_color_r
-        self.cfg['GENERAL']['COLOR_G'] = self.default_color_g
-        self.cfg['GENERAL']['COLOR_B'] = self.default_color_b
+        self.cfg['GENERAL']['COLOR_R'] = str(self.default_color_r)
+        self.cfg['GENERAL']['COLOR_G'] = str(self.default_color_g)
+        self.cfg['GENERAL']['COLOR_B'] = str(self.default_color_b)
         self.save_config()
 
     def manual_turn_on(self):
-        strip = self.strip
         """manually turns on the lamp"""
-        for i in range(max(strip.numPixels(), strip.numPixels())):
-            strip.setPixelColor(i, Color(0, 0, 0))
-            strip.show()
+        print('ON')
+        self.status = 'on'
+        self.colorWipe(self.onColor)
 
     def manual_turn_off(self):
-        strip = self.strip
         """Manually turns off the lamp"""
-        for i in range(max(strip.numPixels(), strip.numPixels())):
-            strip.setPixelColor(i, Color(0, 0, 0))
-            strip.show()
+        print('OFF')
+        self.status = 'off'
+        self.colorWipe(self.offColor)
+
+    def colorWipe(self, color, wait_ms=60):
+        """Wipe color across display a pixel at a time."""
+        for i in range(self.strip.numPixels()):
+            self.strip.setPixelColor(i, color)
+            self.strip.show()
+            time.sleep(wait_ms / 1000.0)
 
     @staticmethod
     def wheel(pos):
@@ -145,11 +168,56 @@ class FriendFaces:
             return Color(0, pos * 3, 255 - pos * 3)
 
     def rainbow(self, wait_ms=20, iterations=1):
-        strip = self.strip
         """Draw rainbow that fades across all pixels at once."""
         for j in range(256 * iterations):
-            for i in range(strip.numPixels()):
-                strip.setPixelColor(i, self.wheel((i + j) & 255))
-            strip.show()
+            for i in range(self.strip.numPixels()):
+                self.strip.setPixelColor(i, self.wheel((i + j) & 255))
+            self.strip.show()
             time.sleep(wait_ms / 1000.0)
         self.manual_turn_off()
+
+    def rainbowCycle(self, wait_ms=20, iterations=5):
+        """Draw rainbow that uniformly distributes itself across all pixels."""
+        for j in range(256*iterations):
+            for i in range(self.strip.numPixels()):
+                self.strip.setPixelColor(i, self.wheel((int(i * 256 / self.strip.numPixels()) + j) & 255))
+            self.strip.show()
+            time.sleep(wait_ms/1000.0)
+
+    def theaterChaseRainbow(self, wait_ms=50):
+        """Rainbow movie theater light style chaser animation."""
+        for j in range(256):
+            for q in range(3):
+                for i in range(0, self.strip.numPixels(), 3):
+                    self.strip.setPixelColor(i+q, self.wheel((i+j) % 255))
+                self.strip.show()
+                time.sleep(wait_ms/1000.0)
+                for i in range(0, self.strip.numPixels(), 3):
+                    self.strip.setPixelColor(i+q, 0)
+
+    def theaterChase(self, color, wait_ms=50, iterations=10):
+        """Movie theater light style chaser animation."""
+        for j in range(iterations):
+            for q in range(3):
+                for i in range(0, self.strip.numPixels(), 3):
+                    self.strip.setPixelColor(i + q, color)
+                self.strip.show()
+                time.sleep(wait_ms / 1000.0)
+                for i in range(0, self.strip.numPixels(), 3):
+                    self.strip.setPixelColor(i + q, 0)
+
+    def flash(self):
+        """Flash a color for Time and goes back to black"""
+        self.colorWipe(self.flashColor)
+        time.sleep(500 / 1000.0)
+        self.manual_turn_off()
+
+    def setBrightness(self):
+        """Sets a lower brightness when at night"""
+        now = datetime.datetime.now()
+
+        # Low light during 19-8 o'clock
+        if (8 < now.hour < 19):
+            self.strip.setBrightness(200)
+        else:
+            self.strip.setBrightness(15)

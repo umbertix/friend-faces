@@ -7,11 +7,12 @@ class Sender:
     def __init__(self, app_id, key, secret, channel_name, cluster=None, encrypted=None):
         """Initializes the server object."""
         if cluster is None:
-            cluster = 'eu'
+            cluster = 'mt1'
+
         if encrypted is None:
             encrypted = True
 
-        self.pusher = Pusher(app_id, key, secret, cluster, encrypted)
+        self.pusher = Pusher(app_id, key, secret, cluster=cluster, ssl=encrypted)
 
         self.app_id = app_id
         self.key = key
@@ -19,7 +20,7 @@ class Sender:
         self.channel_name = channel_name
         self.cluster = cluster
         self.encrypted = encrypted
-        self.socket_id = None
+        self.socket_id = u"1234.12"
         self.auth = self.join_channel()
 
     def join_channel(self):
@@ -33,4 +34,4 @@ class Sender:
         """Send an event to the channel"""
         if channel is None:
             channel = self.channel_name
-        self.pusher.trigger(channel, event, {message})
+        self.pusher.trigger(channel, event, { 'data': message })
