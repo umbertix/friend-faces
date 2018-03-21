@@ -5,23 +5,17 @@ from sender import Sender
 from receiver import Receiver
 from neopixel import *
 from gpiozero import Button
-
+import logging
+from logging.handlers import RotatingFileHandler
 
 class FriendFaces:
     def __init__(self):
-        print('Initializing.....')
-        self.status = 'off'
-        self.onColor = Color(255, 255, 255, 100)
-        self.offColor = Color(0, 0, 0, 1)
-        self.flashColor = Color(48, 24, 201)
+        self.initLogger()
+        self.logger.debug('Initializing.....')
         self.cfg = configparser.ConfigParser()
         self.load_config()
-        print('Config loaded')
-        self.default_color_r = self.cfg.getint('GENERAL', 'COLOR_R')
-        self.default_color_g = self.cfg.getint('GENERAL', 'COLOR_G')
-        self.default_color_b = self.cfg.getint('GENERAL', 'COLOR_B')
-
-        print('Initializing sender....')
+        self.setColors()
+        self.logger.debug('Initializing sender....')
         # Sender will be used to send messages to the channel
         self.sender = Sender(
             self.cfg.get('PUSHER', 'APPID'),
@@ -31,8 +25,7 @@ class FriendFaces:
             self.cfg.get('PUSHER', 'CLUSTER'),
             encrypted=False
         )
-        print('sender initialized')
-        print('Initializing receiver....')
+        self.logger.debug('Initializing receiver....')
         self.receiver = Receiver(
             self.cfg.get('PUSHER', 'APPKEY'),
             self.cfg.get('PUSHER', 'APPSECRET'),
@@ -40,10 +33,7 @@ class FriendFaces:
             self.cfg.get('PUSHER', 'EVENTNAME'),
             self.received_hello
         )
-        print('Receiver initialized')
-        print('Initializing gpios....')
         self.initializes_gpios()
-        print('gpios initialized')
         self.strip = Adafruit_NeoPixel(
             self.cfg.getint('LED', 'COUNT'),
             self.cfg.getint('LED', 'PIN'),
@@ -53,23 +43,24 @@ class FriendFaces:
         )
 
         self.strip.begin()  # Initialize neopixel library
-        print('Setting brightness')
         self.setBrightness()
-        print('!! READY !!')
-        print('!! Flashing !!')
+        self.logger.debug('!! READY !!')
         self.flash()
 
     def load_config(self):
         """Loads the configuration from the file"""
+        self.logger.debug('Loading config')
         self.cfg.read('config.ini')
 
     def save_config(self):
         """Saves the configuration to the file"""
+        self.logger.debug('Saving config')
         with open('config.ini', 'w') as configfile:
             self.cfg.write(configfile)
 
     def initializes_gpios(self):
         """Initializes each button to the configured pin and bind's the event to the button"""
+        self.logger.debug('Initializing gpios....')
         self.button = Button(self.cfg.getint('TOUCH', 'PIN'))
         self.button1 = Button(self.cfg.getint('TOUCH', 'PIN1'))
         self.button2 = Button(self.cfg.getint('TOUCH', 'PIN2'))
@@ -90,7 +81,7 @@ class FriendFaces:
         self.button3.when_pressed = self.manual_turn_off
 
     def say_hello_button(self):
-        print('Say Hello button')
+        self.logger.debug('Say Hello button')
         self.sender.send_message(
             self.cfg.get('PUSHER', 'EVENTNAME'),
             'Hello message'
@@ -98,11 +89,12 @@ class FriendFaces:
 
     def received_hello(self, *args, **kwargs):
         """turn on the light for X seconds"""
-        print('Received !!!!!!!!!!')
+        self.logger.debug('Received !!!!!!!!!!')
         self.flash()
 
     def change_color_on_touch(self):
         """Change the color incrementally while pressing the button and returns the value"""
+        self.logger.debug('Changing color')
         r = self.default_color_r
         g = self.default_color_g
         b = self.default_color_b
@@ -131,21 +123,21 @@ class FriendFaces:
 
     def save_color_in_memory(self):
         """Saves the color into the SD card to reuse"""
+        self.logger.debug('Saving color settings in permanent memory')
         self.cfg['GENERAL']['COLOR_R'] = str(self.default_color_r)
         self.cfg['GENERAL']['COLOR_G'] = str(self.default_color_g)
         self.cfg['GENERAL']['COLOR_B'] = str(self.default_color_b)
+        self.setColors()
         self.save_config()
 
     def manual_turn_on(self):
         """manually turns on the lamp"""
-        print('ON')
-        self.status = 'on'
+        self.logger.debug('ON')
         self.colorWipe(self.onColor)
 
     def manual_turn_off(self):
         """Manually turns off the lamp"""
-        print('OFF')
-        self.status = 'off'
+        self.logger.debug('OFF')
         self.colorWipe(self.offColor)
 
     def colorWipe(self, color, wait_ms=60):
@@ -208,12 +200,14 @@ class FriendFaces:
 
     def flash(self):
         """Flash a color for Time and goes back to black"""
+        self.logger.debug('Flashing')
         self.colorWipe(self.flashColor)
         time.sleep(500 / 1000.0)
         self.manual_turn_off()
 
     def setBrightness(self):
         """Sets a lower brightness when at night"""
+        self.logger.debug('Setting brightness')
         now = datetime.datetime.now()
 
         # Low light during 19-8 o'clock
@@ -221,3 +215,20 @@ class FriendFaces:
             self.strip.setBrightness(200)
         else:
             self.strip.setBrightness(15)
+
+    def setColors(self):
+        """Sets the colors with the desired values"""
+        self.logger.debug('Setting flash color')
+        self.default_color_r = self.cfg.getint('GENERAL', 'COLOR_R')
+        self.default_color_g = self.cfg.getint('GENERAL', 'COLOR_G')
+        self.default_color_b = self.cfg.getint('GENERAL', 'COLOR_B')
+        self.onColor = Color(self.default_color_r, self.default_color_g, self.default_color_b)
+        self.flashColor = Color(48, 24, 201)
+        self.offColor = Color(0, 0, 0, 1)
+
+    def initLogger(self):
+        """Inits the logging with the rotating config"""
+        self.logger = logging.getLogger('my_logger')
+        self.logger.setLevel(logging.DEBUG)
+        handler = RotatingFileHandler('my_log.log', maxBytes=2000, backupCount=3)
+        self.logger.addHandler(handler)
