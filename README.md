@@ -29,18 +29,19 @@ The links to the components are just a suggestion on where to get them. Internet
 - SSH into the raspberry
 - [Install the rpi_ws281x Library](https://learn.adafruit.com/neopixels-on-raspberry-pi/software)
     - `sudo apt-get update`
-    - `sudo apt-get install build-essential python-dev git scons swig`
+    - `sudo apt-get install build-essential python-dev git scons swig libssl-dev libffi-dev`
+    - `pip install wheel`
     - `git clone https://github.com/jgarff/rpi_ws281x.git`
     - `cd rpi_ws281x`
     - `scons`
     - `cd python`
-    - `sudo python3 setup.py install`
+    - `sudo python setup.py install`
 - [Install GPIO Zero library](https://gpiozero.readthedocs.io/en/stable/installing.html)
     - `sudo apt install python3-gpiozero`
 - [Install the project](https://github.com/umbertix/friend-faces)
     - `git clone https://github.com/umbertix/friend-faces.git`
     - `cd friend-faces`
-    - `sudo python3 setup.py install`
+    - `sudo python setup.py install`
 - Config your lamp
     - Within the project there is file named `config.ini` that holds your credentials for the pusher service.
     You will need to update those in order to communicate, also if you decide to use any other pin setup or ring size.
