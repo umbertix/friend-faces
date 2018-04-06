@@ -37,9 +37,6 @@ class FriendFaces:
         self.strip = Adafruit_NeoPixel(
             self.cfg.getint('LED', 'COUNT'),
             self.cfg.getint('LED', 'PIN'),
-            self.cfg.getint('LED', 'FREQ_HZ'),
-            self.cfg.getint('LED', 'DMA'),
-            self.cfg.getboolean('LED', 'INVERT'),
         )
 
         self.strip.begin()  # Initialize neopixel library
