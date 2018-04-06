@@ -34,14 +34,19 @@ The links to the components are just a suggestion on where to get them. Internet
     - `cd rpi_ws281x`
     - `scons`
     - `cd python`
-    - `sudo python3 setup.py install`
+    - `sudo python setup.py install`
+- Install pip
+    - `apt install python-pip`
+    - `pip install pip --upgrade`
+    - Update package needed: `wget https://bootstrap.pypa.io/ez_setup.py -O - | sudo python`
+    - `pip install setuptools --upgrade`
 - [Install GPIO Zero library](https://gpiozero.readthedocs.io/en/stable/installing.html)
-    - `sudo apt install python3-gpiozero`
+    - `sudo pip install gpiozero`
 - [Install the project](https://github.com/umbertix/friend-faces)
     - `git clone https://github.com/umbertix/friend-faces.git`
     - `cd friend-faces`
     - `sudo python3 setup.py install`
-- Config your lamp
+- Config your "lamp"
     - Within the project there is file named `config.ini` that holds your credentials for the pusher service.
     You will need to update those in order to communicate, also if you decide to use any other pin setup or ring size.
 

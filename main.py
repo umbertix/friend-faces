@@ -1,5 +1,4 @@
 from friendFaces import FriendFaces
-from neopixel import *
 
 try:
     main = FriendFaces()

@@ -1,4 +1,4 @@
-import pysher
+import pusherclient
 
 
 class Receiver:
@@ -8,7 +8,7 @@ class Receiver:
         self.channel_name = channel_name
         self.event_name = event_name
         self.event_callback_function = event_callback_function
-        self.pusher = pysher.Pusher(key, secret)
+        self.pusher = pusherclient.Pusher(key, secret)
         self.pusher.connection.bind('pusher:connection_established', self.connect_handler)
         self.pusher.connect()
 
