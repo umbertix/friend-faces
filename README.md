@@ -29,20 +29,16 @@ The links to the components are just a suggestion on where to get them. Internet
 - SSH into the raspberry
 - [Install the rpi_ws281x Library](https://learn.adafruit.com/neopixels-on-raspberry-pi/software)
     - `sudo apt-get update`
-    - `sudo apt-get install build-essential python-dev git scons swig libssl-dev libffi-dev`
-    - `pip install wheel`
+    - `sudo apt-get upgrade`
+    - `sudo apt-get install build-essential python-dev git scons swig libssl-dev libffi-dev python-pip`
+    - `pip install pip --upgrade`
+    - `pip install setuptools --upgrade`
     - `git clone https://github.com/jgarff/rpi_ws281x.git`
     - `cd rpi_ws281x`
     - `scons`
     - `cd python`
     - `sudo python setup.py install`
-- Install pip
-    - `apt install python-pip`
-    - `pip install pip --upgrade`
     - Update package needed: `wget https://bootstrap.pypa.io/ez_setup.py -O - | sudo python`
-    - `pip install setuptools --upgrade`
-- [Install GPIO Zero library](https://gpiozero.readthedocs.io/en/stable/installing.html)
-    - `sudo pip install gpiozero`
 - [Install the project](https://github.com/umbertix/friend-faces)
     - `git clone https://github.com/umbertix/friend-faces.git`
     - `cd friend-faces`

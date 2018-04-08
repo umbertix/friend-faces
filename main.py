@@ -5,4 +5,4 @@ try:
     while True:
         pass
 except KeyboardInterrupt:
-    main.colorWipe(main.offColor)
+    main.color_wipe(main.offColor)
