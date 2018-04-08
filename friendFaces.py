@@ -1,36 +1,39 @@
 import time
 import datetime
 import configparser
+import json
+import logging
 from sender import Sender
 from receiver import Receiver
 from neopixel import *
 from gpiozero import Button
-import logging
 from logging.handlers import RotatingFileHandler
 
 class FriendFaces:
     def __init__(self):
-        self.initLogger()
+        self.init_logger()
         self.logger.debug('Initializing.....')
         self.cfg = configparser.ConfigParser()
         self.load_config()
-        self.setColors()
+        self.set_colors()
         self.logger.debug('Initializing sender....')
+        self.lamp_status = 'off'
+
         # Sender will be used to send messages to the channel
         self.sender = Sender(
-            self.cfg.get('PUSHER', 'APPID'),
-            self.cfg.get('PUSHER', 'APPKEY'),
-            self.cfg.get('PUSHER', 'APPSECRET'),
-            self.cfg.get('PUSHER', 'CHANNELNAME'),
+            self.cfg.get('PUSHER', 'APP_ID'),
+            self.cfg.get('PUSHER', 'APP_KEY'),
+            self.cfg.get('PUSHER', 'APP_SECRET'),
+            self.cfg.get('PUSHER', 'CHANNEL_NAME'),
             self.cfg.get('PUSHER', 'CLUSTER'),
             encrypted=False
         )
         self.logger.debug('Initializing receiver....')
         self.receiver = Receiver(
-            self.cfg.get('PUSHER', 'APPKEY'),
-            self.cfg.get('PUSHER', 'APPSECRET'),
-            self.cfg.get('PUSHER', 'CHANNELNAME'),
-            self.cfg.get('PUSHER', 'EVENTNAME'),
+            self.cfg.get('PUSHER', 'APP_KEY'),
+            self.cfg.get('PUSHER', 'APP_SECRET'),
+            self.cfg.get('PUSHER', 'CHANNEL_NAME'),
+            self.cfg.get('PUSHER', 'EVENT_NAME'),
             self.received_hello
         )
         self.initializes_gpios()
@@ -40,9 +43,9 @@ class FriendFaces:
         )
 
         self.strip.begin()  # Initialize neopixel library
-        self.setBrightness()
+        self.set_brightness()
         self.logger.debug('!! READY !!')
-        self.flash()
+        self.visual_feedback()
 
     def load_config(self):
         """Loads the configuration from the file"""
@@ -79,15 +82,20 @@ class FriendFaces:
 
     def say_hello_button(self):
         self.logger.debug('Say Hello button')
+        data = '{"sender": "' + self.cfg.get('PUSHER', 'SENDER_NAME') + '", "effect": "' + self.cfg.get('PUSHER', 'SENDER_EFFECT') + '"}'
         self.sender.send_message(
-            self.cfg.get('PUSHER', 'EVENTNAME'),
-            'Hello message'
+            self.cfg.get('PUSHER', 'EVENT_NAME'),
+            data
         )
 
     def received_hello(self, *args, **kwargs):
         """turn on the light for X seconds"""
         self.logger.debug('Received !!!!!!!!!!')
-        self.flash()
+        message_received = json.loads(args[0])
+        self.logger.debug(message_received['sender'])
+        self.logger.debug(message_received['effect'])
+        if message_received['sender'] != self.cfg.get('PUSHER', 'SENDER_NAME'):
+            self.visual_feedback(message_received['effect'])
 
     def change_color_on_touch(self):
         """Change the color incrementally while pressing the button and returns the value"""
@@ -111,7 +119,7 @@ class FriendFaces:
                 b -= 1
 
             if i % 50 == 0:
-                self.colorWipe(Color(r, g, b))
+                self.color_wipe(Color(r, g, b))
                 time.sleep((self.strip.numPixels() * 10) / 1000.0)
 
         self.default_color_r = r
@@ -124,20 +132,22 @@ class FriendFaces:
         self.cfg['GENERAL']['COLOR_R'] = str(self.default_color_r)
         self.cfg['GENERAL']['COLOR_G'] = str(self.default_color_g)
         self.cfg['GENERAL']['COLOR_B'] = str(self.default_color_b)
-        self.setColors()
+        self.set_colors()
         self.save_config()
 
     def manual_turn_on(self):
         """manually turns on the lamp"""
         self.logger.debug('ON')
-        self.colorWipe(self.onColor)
+        self.color_wipe(self.onColor)
+        self.lamp_status = 'on'
 
     def manual_turn_off(self):
         """Manually turns off the lamp"""
         self.logger.debug('OFF')
-        self.colorWipe(self.offColor)
+        self.color_wipe(self.offColor)
+        self.lamp_status = 'off'
 
-    def colorWipe(self, color, wait_ms=60):
+    def color_wipe(self, color, wait_ms=60):
         """Wipe color across display a pixel at a time."""
         for i in range(self.strip.numPixels()):
             self.strip.setPixelColor(i, color)
@@ -165,7 +175,7 @@ class FriendFaces:
             time.sleep(wait_ms / 1000.0)
         self.manual_turn_off()
 
-    def rainbowCycle(self, wait_ms=20, iterations=5):
+    def rainbow_cycle(self, wait_ms=20, iterations=5):
         """Draw rainbow that uniformly distributes itself across all pixels."""
         for j in range(256*iterations):
             for i in range(self.strip.numPixels()):
@@ -173,7 +183,7 @@ class FriendFaces:
             self.strip.show()
             time.sleep(wait_ms/1000.0)
 
-    def theaterChaseRainbow(self, wait_ms=50):
+    def theater_chase_rainbow(self, wait_ms=50):
         """Rainbow movie theater light style chaser animation."""
         for j in range(256):
             for q in range(3):
@@ -184,7 +194,7 @@ class FriendFaces:
                 for i in range(0, self.strip.numPixels(), 3):
                     self.strip.setPixelColor(i+q, 0)
 
-    def theaterChase(self, color, wait_ms=50, iterations=10):
+    def theater_chase(self, color, wait_ms=50, iterations=10):
         """Movie theater light style chaser animation."""
         for j in range(iterations):
             for q in range(3):
@@ -195,25 +205,38 @@ class FriendFaces:
                 for i in range(0, self.strip.numPixels(), 3):
                     self.strip.setPixelColor(i + q, 0)
 
-    def flash(self):
+    def flash_effect(self):
+        for q in range(20):
+            self.color_wipe(self.flashColor, 1)
+            self.color_wipe(self.offColor, 1)
+
+    def visual_feedback(self, effect='wipe'):
         """Flash a color for Time and goes back to black"""
         self.logger.debug('Flashing')
-        self.colorWipe(self.flashColor)
-        time.sleep(500 / 1000.0)
-        self.manual_turn_off()
+        if effect == 'rainbow':
+            self.rainbow()
+        elif effect == 'chase':
+            self.theater_chase(self.flashColor)
+        elif effect == 'flash':
+            self.flash_effect()
+        else:
+            self.color_wipe(self.flashColor)
 
-    def setBrightness(self):
+        time.sleep(500 / 1000.0)
+        self.set_lamp_to_status()
+
+    def set_brightness(self):
         """Sets a lower brightness when at night"""
         self.logger.debug('Setting brightness')
         now = datetime.datetime.now()
 
         # Low light during 19-8 o'clock
-        if (8 < now.hour < 19):
+        if 8 < now.hour < 19:
             self.strip.setBrightness(200)
         else:
             self.strip.setBrightness(15)
 
-    def setColors(self):
+    def set_colors(self):
         """Sets the colors with the desired values"""
         self.logger.debug('Setting flash color')
         self.default_color_r = self.cfg.getint('GENERAL', 'COLOR_R')
@@ -223,9 +246,15 @@ class FriendFaces:
         self.flashColor = Color(48, 24, 201)
         self.offColor = Color(0, 0, 0, 1)
 
-    def initLogger(self):
-        """Inits the logging with the rotating config"""
+    def init_logger(self):
+        """Initializes the logging with the rotating config"""
         self.logger = logging.getLogger('my_logger')
         self.logger.setLevel(logging.DEBUG)
         handler = RotatingFileHandler('my_log.log', maxBytes=2000, backupCount=3)
         self.logger.addHandler(handler)
+
+    def set_lamp_to_status(self):
+        if self.lamp_status == 'off':
+            self.manual_turn_off()
+        else:
+            self.manual_turn_on()

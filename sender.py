@@ -34,4 +34,4 @@ class Sender:
         """Send an event to the channel"""
         if channel is None:
             channel = self.channel_name
-        self.pusher.trigger(channel, event, { 'data': message })
+        self.pusher.trigger(channel, event, message)
