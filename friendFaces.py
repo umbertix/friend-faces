@@ -3,6 +3,7 @@ import datetime
 import configparser
 import json
 import logging
+import httplib
 from sender import Sender
 from receiver import Receiver
 from neopixel import *
@@ -44,8 +45,11 @@ class FriendFaces:
 
         self.strip.begin()  # Initialize neopixel library
         self.set_brightness()
+        if self.have_internet():
+            self.visual_feedback('wipe', Color(0, 0, 255))
+        else:
+            self.visual_feedback('flash', Color(255, 0, 0))
         self.logger.debug('!! READY !!')
-        self.visual_feedback()
 
     def load_config(self):
         """Loads the configuration from the file"""
@@ -205,22 +209,27 @@ class FriendFaces:
                 for i in range(0, self.strip.numPixels(), 3):
                     self.strip.setPixelColor(i + q, 0)
 
-    def flash_effect(self):
+    def flash_effect(self, color):
         for q in range(20):
-            self.color_wipe(self.flashColor, 1)
+            self.color_wipe(color, 1)
             self.color_wipe(self.offColor, 1)
 
-    def visual_feedback(self, effect='wipe'):
+    def visual_feedback(self, effect='wipe', color=None):
         """Flash a color for Time and goes back to black"""
-        self.logger.debug('Flashing')
+        self.logger.debug(effect)
+        if color is None:
+            color_to_run = self.flashColor
+        else:
+            color_to_run = color
+
         if effect == 'rainbow':
             self.rainbow()
         elif effect == 'chase':
-            self.theater_chase(self.flashColor)
+            self.theater_chase(color_to_run)
         elif effect == 'flash':
-            self.flash_effect()
+            self.flash_effect(color_to_run)
         else:
-            self.color_wipe(self.flashColor)
+            self.color_wipe(color_to_run)
 
         time.sleep(500 / 1000.0)
         self.set_lamp_to_status()
@@ -258,3 +267,14 @@ class FriendFaces:
             self.manual_turn_off()
         else:
             self.manual_turn_on()
+
+    @staticmethod
+    def have_internet():
+        conn = httplib.HTTPConnection('www.google.com', timeout=5)
+        try:
+            conn.request('HEAD', '/')
+            conn.close()
+            return True
+        except:
+            conn.close()
+            return False
