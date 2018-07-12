@@ -37,6 +37,7 @@ class FriendFaces:
             self.cfg.get('PUSHER', 'EVENT_NAME'),
             self.received_hello
         )
+        self.logger.debug('Initializing gpios....')
         self.initializes_gpios()
         self.strip = Adafruit_NeoPixel(
             self.cfg.getint('LED', 'COUNT'),
@@ -181,22 +182,22 @@ class FriendFaces:
 
     def rainbow_cycle(self, wait_ms=20, iterations=5):
         """Draw rainbow that uniformly distributes itself across all pixels."""
-        for j in range(256*iterations):
+        for j in range(256 * iterations):
             for i in range(self.strip.numPixels()):
                 self.strip.setPixelColor(i, self.wheel((int(i * 256 / self.strip.numPixels()) + j) & 255))
             self.strip.show()
-            time.sleep(wait_ms/1000.0)
+            time.sleep(wait_ms / 1000.0)
 
     def theater_chase_rainbow(self, wait_ms=50):
         """Rainbow movie theater light style chaser animation."""
         for j in range(256):
             for q in range(3):
                 for i in range(0, self.strip.numPixels(), 3):
-                    self.strip.setPixelColor(i+q, self.wheel((i+j) % 255))
+                    self.strip.setPixelColor(i + q, self.wheel((i + j) % 255))
                 self.strip.show()
-                time.sleep(wait_ms/1000.0)
+                time.sleep(wait_ms / 1000.0)
                 for i in range(0, self.strip.numPixels(), 3):
-                    self.strip.setPixelColor(i+q, 0)
+                    self.strip.setPixelColor(i + q, 0)
 
     def theater_chase(self, color, wait_ms=50, iterations=10):
         """Movie theater light style chaser animation."""
