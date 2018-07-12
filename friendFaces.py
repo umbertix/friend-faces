@@ -1,5 +1,7 @@
 import time
 import datetime
+from logging import Logger
+
 import configparser
 import json
 import logging
@@ -12,6 +14,19 @@ from logging.handlers import RotatingFileHandler
 
 
 class FriendFaces:
+    logger = None  # type: Logger
+    default_color_r = None  # type: str
+    default_color_g = None  # type: str
+    default_color_b = None  # type: str
+    onColor = None  # type: Color
+    flashColor = None  # type: Color
+    offColor = None  # type: Color
+    button = None  # type: Button
+    button1 = None  # type: Button
+    button2 = None  # type: Button
+    button3 = None  # type: Button
+    button4 = None  # type: Button
+
     def __init__(self):
         self.init_logger()
         self.logger.debug('Initializing.....')
@@ -270,13 +285,15 @@ class FriendFaces:
         else:
             self.manual_turn_on()
 
-    @staticmethod
-    def have_internet():
+    def have_internet(self):
+        self.logger.debug('Checking internet connection')
         conn = httplib.HTTPConnection('www.google.com', timeout=5)
         try:
+            self.logger.debug('Connection seems succesful')
             conn.request('HEAD', '/')
-            conn.close()
             return True
         except:
-            conn.close()
+            self.logger.debug('Connection failed')
             return False
+        finally:
+            conn.close()
