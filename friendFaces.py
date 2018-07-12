@@ -10,6 +10,7 @@ from neopixel import *
 from gpiozero import Button
 from logging.handlers import RotatingFileHandler
 
+
 class FriendFaces:
     def __init__(self):
         self.init_logger()
