@@ -33,6 +33,13 @@ The links to the components are just a suggestion on where to get them. Internet
     - `sudo apt-get install build-essential python-dev git scons swig libssl-dev libffi-dev python-pip`
     - `pip install pip --upgrade`
     - `pip install setuptools --upgrade`
+        - If you run into a problem saying something along this:
+            ```Traceback (most recent call last):
+            File "/usr/bin/pip", line 9, in <module>
+            from pip import main
+            ImportError: cannot import name main"
+            ```
+            You might want to try to run this instead `python -m pip install setuptools --upgrade --user`
     - `git clone https://github.com/jgarff/rpi_ws281x.git`
     - `cd rpi_ws281x`
     - `scons`
