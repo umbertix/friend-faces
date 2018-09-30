@@ -3,9 +3,11 @@ from setuptools import setup
 VERSION = "0.0.1"
 
 requirements = [
+    "wheel",
+    "gpiozero",
     "websocket-client",
     "pusher",
-    "pysher",
+    "pusherclient",
     "configparser",
 ]
 
