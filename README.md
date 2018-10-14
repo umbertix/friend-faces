@@ -44,6 +44,7 @@ The links to the components are just a suggestion on where to get them. Internet
     - `cd rpi_ws281x`
     - `scons`
     - `cd python`
+    - `python ./setup.py build`
     - `sudo python setup.py install`
     - Update package needed: `wget https://bootstrap.pypa.io/ez_setup.py -O - | sudo python`
 - [Install the project](https://github.com/umbertix/friend-faces)
